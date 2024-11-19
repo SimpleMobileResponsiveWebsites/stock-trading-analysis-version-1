@@ -5,12 +5,11 @@ import seaborn as sns
 import plotly.express as px
 from datetime import datetime
 
-# Load Datasets
+# Load Data Function
 @st.cache_data
-def load_data(file_path_csv, file_path_xlsx):
-    # Load CSV and XLSX files
-    csv_data = pd.read_csv(file_path_csv)
-    xlsx_data = pd.read_excel(file_path_xlsx, sheet_name=None)  # Load all sheets
+def load_data_from_files(csv_path, xlsx_path):
+    csv_data = pd.read_csv(csv_path)
+    xlsx_data = pd.read_excel(xlsx_path, sheet_name=None)  # Load all sheets
     return csv_data, xlsx_data
 
 # Sidebar for Dataset Selection
@@ -29,7 +28,7 @@ def select_columns(df):
     selected_columns = st.sidebar.multiselect("Select columns to display:", available_columns, default=available_columns)
     return selected_columns
 
-# Data Filtering by Date Range
+# Date Filtering
 def filter_by_date(df):
     st.sidebar.subheader("Filter by Date")
     if "Date" in df.columns:
@@ -80,15 +79,29 @@ def main():
     st.title("Stock Data Visualization")
     st.markdown("Visualize Yahoo Stock Datasets: 1d, 5d, 1m, 6m, 1y, 5y, and All.")
 
+    # Default File Paths (for deployment with preloaded files)
+    default_csv = "yahoo_stock_data_extraction (5).csv"
+    default_xlsx = "yahoo_stock_data_extraction (5).xlsx"
+
+    # File Upload Option
+    st.sidebar.subheader("Upload Files")
+    uploaded_csv = st.sidebar.file_uploader("Upload CSV File", type="csv")
+    uploaded_xlsx = st.sidebar.file_uploader("Upload XLSX File", type="xlsx")
+
     # Load Data
-    csv_file = "/mnt/data/yahoo_stock_data_extraction (5).csv"
-    xlsx_file = "/mnt/data/yahoo_stock_data_extraction (5).xlsx"
-    csv_data, xlsx_data = load_data(csv_file, xlsx_file)
+    if uploaded_csv and uploaded_xlsx:
+        st.sidebar.write("Using uploaded files.")
+        csv_data = pd.read_csv(uploaded_csv)
+        xlsx_data = pd.read_excel(uploaded_xlsx, sheet_name=None)
+    else:
+        st.sidebar.write("Using default files.")
+        csv_data, xlsx_data = load_data_from_files(default_csv, default_xlsx)
 
     # Dataset Selection
     dataset_choice = sidebar()
     st.sidebar.write(f"Selected Dataset: {dataset_choice}")
 
+    # Load the selected dataset
     if dataset_choice in xlsx_data:
         df = xlsx_data[dataset_choice]
     else:
@@ -101,12 +114,12 @@ def main():
     # Date Filtering
     filtered_df = filter_by_date(filtered_df)
 
-    # Show Dataframe
+    # Show Filtered Dataframe
     st.write("Filtered Data", filtered_df)
 
     # Plot Visualizations
     plot_visualizations(filtered_df)
 
-# Run App
+# Run the App
 if __name__ == "__main__":
     main()
