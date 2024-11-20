@@ -5,16 +5,17 @@ import seaborn as sns
 import plotly.express as px
 
 # Function to load datasets
+@st.cache_data
 def load_data(uploaded_csv, uploaded_xlsx):
     try:
         # Load CSV data
-        if uploaded_csv:
+        if uploaded_csv is not None:
             csv_data = pd.read_csv(uploaded_csv)
         else:
             csv_data = pd.read_csv("yahoo_stock_data_extraction (5).csv")  # Default CSV file
 
         # Load XLSX data
-        if uploaded_xlsx:
+        if uploaded_xlsx is not None:
             xlsx_data = pd.read_excel(uploaded_xlsx, sheet_name=None)  # All sheets
         else:
             xlsx_data = pd.read_excel("yahoo_stock_data_extraction (5).xlsx", sheet_name=None)  # Default XLSX file
@@ -52,13 +53,13 @@ def plot_visualizations(df):
 
     # Line Chart
     if st.checkbox("Show Line Chart"):
-        y_axis = st.selectbox("Select Y-axis for Line Chart:", df.columns)
+        y_axis = st.selectbox("Select Y-axis for Line Chart:", df.columns, key="line_chart")
         line_chart = px.line(df, x=df.index, y=y_axis, title=f"{y_axis} over Time")
         st.plotly_chart(line_chart, use_container_width=True)
 
     # Bar Chart
     if st.checkbox("Show Bar Chart"):
-        y_axis = st.selectbox("Select Y-axis for Bar Chart:", df.columns)
+        y_axis = st.selectbox("Select Y-axis for Bar Chart:", df.columns, key="bar_chart")
         bar_chart = px.bar(df, x=df.index, y=y_axis, title=f"{y_axis} Distribution")
         st.plotly_chart(bar_chart, use_container_width=True)
 
@@ -84,7 +85,8 @@ def main():
     # Load data
     csv_data, xlsx_data = load_data(uploaded_csv, uploaded_xlsx)
 
-    if not csv_data or not xlsx_data:
+    # Properly check for loaded data
+    if csv_data is None or xlsx_data is None:
         st.warning("No data available to display. Please upload valid files or ensure default files are present.")
         return
 
